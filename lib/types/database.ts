@@ -10,8 +10,7 @@ export interface CheckModelRow {
   id: string;
   type: string;
   model: string;
-  request_header?: Record<string, string> | null;
-  metadata?: Record<string, unknown> | null;
+  template_id?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -28,11 +27,9 @@ export interface CheckConfigRow {
   api_key: string;
   enabled: boolean;
   is_maintenance: boolean;
-  template_id?: string | null;
-  request_header?: Record<string, string> | null;
-  metadata?: Record<string, unknown> | null;
   group_name?: string | null;
   created_at?: string;
+  updated_at?: string;
 }
 
 /**

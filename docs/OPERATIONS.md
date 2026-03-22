@@ -263,10 +263,10 @@ UPDATE check_configs SET enabled = false WHERE name = 'OpenAI GPT-4o';
 参数优先级固定为：
 
 - `check_request_templates`：跨模型复用的通用默认值
-- `check_models`：同一模型统一调整的默认值
-- `check_configs`：实例级覆盖
+- `check_models`：只负责绑定模型与模板
+- `check_configs`：只负责实例连接信息
 
-合并顺序：`template < model < config`
+运行时只读取模型绑定模板中的 `request_header` / `metadata`
 
 ### 5.2 分组信息维护
 
