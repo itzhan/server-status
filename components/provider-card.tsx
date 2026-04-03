@@ -1,6 +1,8 @@
 "use client";
 
-import {Radio, Zap} from "lucide-react";
+import {useCallback} from "react";
+import {Radio, Zap, Copy} from "lucide-react";
+import {toast} from "sonner";
 
 import {ProviderIcon} from "@/components/provider-icon";
 import {StatusTimeline} from "@/components/status-timeline";
@@ -24,6 +26,12 @@ interface ProviderCardProps {
 
 const formatLatency = (value: number | null | undefined) =>
   typeof value === "number" ? `${value} ms` : "—";
+
+/** 去掉 /v1 及后续路径后缀（含 /responses、/chat/completions 等），只保留基础 URL */
+const stripApiPath = (endpoint: string) =>
+  endpoint
+    .replace(/\/(v\d+[a-z]*\b.*|responses\/?|chat\/completions\/?|messages\/?)$/, "")
+    .replace(/\/+$/, "");
 
 /** Tech-style decorative corner plus marker */
 const CornerPlus = ({ className }: { className?: string }) => (
@@ -55,6 +63,12 @@ export function ProviderCard({
   const officialStatusMeta = officialStatus
     ? OFFICIAL_STATUS_META[officialStatus.status]
     : null;
+  const displayEndpoint = stripApiPath(latest.endpoint);
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(displayEndpoint).then(() => {
+      toast.success("已复制请求地址", { description: displayEndpoint });
+    });
+  }, [displayEndpoint]);
 
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-border/40 bg-background/40 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20">
@@ -113,6 +127,19 @@ export function ProviderCard({
             </div>
           </div>
         </div>
+
+        {/* Endpoint URL - 请求地址 */}
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="mb-4 flex w-full items-center gap-2 rounded-xl bg-muted/30 px-3 py-2.5 text-left transition-colors hover:bg-muted/50 active:bg-muted/70"
+          title="点击复制请求地址"
+        >
+          <span className="min-w-0 flex-1 truncate font-mono text-xs font-medium text-foreground/80">
+            {displayEndpoint}
+          </span>
+          <Copy className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+        </button>
 
         <div className="space-y-3 border-t border-border/30 pt-4">
           {/* Official Status Row */}
