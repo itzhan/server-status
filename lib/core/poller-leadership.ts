@@ -4,6 +4,8 @@
 
 import "server-only";
 
+import {randomBytes} from "node:crypto";
+
 import {ensurePollerLeaseRow, tryAcquirePollerLease, tryRenewPollerLease} from "../database/poller-lease";
 import {logError} from "../utils";
 import {getPollerLeaderTimer, getPollerRole, setPollerLeaderTimer, setPollerRole, type PollerRole,} from "./global-state";
@@ -11,25 +13,29 @@ import {getPollerLeaderTimer, getPollerRole, setPollerLeaderTimer, setPollerRole
 // 固定租约参数，不暴露环境变量
 const LEASE_DURATION_MS = 120_000;
 const LEASE_RENEW_INTERVAL_MS = 30_000;
-const DEFAULT_NODE_ID = "local";
+const DEFAULT_NODE_ID = "node";
 
-let didWarnMissingNodeId = false;
 let initPromise: Promise<void> | null = null;
 
+/**
+ * 解析节点身份：用户配置的 CHECK_NODE_ID（或 HOSTNAME）作为可读前缀，
+ * 再追加一个进程级唯一后缀（pid + 随机 hex），保证多节点即使共用同名配置
+ * 也绝不会在租约表里撞车。
+ */
 function resolveNodeId(): string {
   const raw = process.env.CHECK_NODE_ID?.trim();
-  if (raw) {
-    return raw;
-  }
+  const prefix = raw || process.env.HOSTNAME?.trim() || DEFAULT_NODE_ID;
+  const instanceSuffix = `${process.pid}-${randomBytes(3).toString("hex")}`;
+  const nodeId = `${prefix}#${instanceSuffix}`;
 
-  const fallback = process.env.HOSTNAME?.trim() || DEFAULT_NODE_ID;
-  if (!didWarnMissingNodeId) {
+  if (!raw) {
     console.warn(
-      `[check-cx] 未设置 CHECK_NODE_ID，使用 ${fallback} 作为节点身份`
+      `[check-cx] 未设置 CHECK_NODE_ID，使用 ${nodeId} 作为节点身份`
     );
-    didWarnMissingNodeId = true;
+  } else {
+    console.log(`[check-cx] 轮询节点身份：${nodeId}`);
   }
-  return fallback;
+  return nodeId;
 }
 
 const NODE_ID = resolveNodeId();

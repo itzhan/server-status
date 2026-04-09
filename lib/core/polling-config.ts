@@ -1,5 +1,5 @@
 const DEFAULT_INTERVAL_SECONDS = 60;
-const MIN_INTERVAL_SECONDS = 15;
+const MIN_INTERVAL_SECONDS = 3;
 const MAX_INTERVAL_SECONDS = 600;
 
 // 官方状态检查默认间隔(5 分钟)

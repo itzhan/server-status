@@ -9,7 +9,7 @@ import {runProviderChecks} from "../providers";
 import {getPollingIntervalMs} from "./polling-config";
 import {getLastPingStartedAt, getPollerTimer, setLastPingStartedAt, setPollerTimer,} from "./global-state";
 import {startOfficialStatusPoller} from "./official-status-poller";
-import {ensurePollerLeadership, isPollerLeader} from "./poller-leadership";
+import {ensurePollerLeadership, getPollerNodeId, isPollerLeader} from "./poller-leadership";
 import type {CheckResult, HealthStatus} from "../types";
 
 const POLL_INTERVAL_MS = getPollingIntervalMs();
@@ -95,6 +95,7 @@ async function tick() {
     return;
   }
   if (!isPollerLeader()) {
+    console.log(`[check-cx] 当前节点非 leader，跳过本轮轮询 (node=${getPollerNodeId()})`);
     return;
   }
   // 原子操作：检查并设置运行状态
